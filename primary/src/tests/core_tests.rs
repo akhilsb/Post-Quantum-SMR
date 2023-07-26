@@ -42,7 +42,7 @@ async fn process_header() {
 
     // Make a synchronizer for the core.
     let synchronizer = Synchronizer::new(
-        name,
+        name.clone(),
         &committee,
         store.clone(),
         /* tx_header_waiter */ tx_sync_headers,
@@ -51,7 +51,7 @@ async fn process_header() {
 
     // Spawn the core.
     Core::spawn(
-        name,
+        name.clone(),
         committee,
         store.clone(),
         synchronizer,
@@ -109,7 +109,7 @@ async fn process_header_missing_parent() {
 
     // Make a synchronizer for the core.
     let synchronizer = Synchronizer::new(
-        name,
+        name.clone(),
         &committee(),
         store.clone(),
         /* tx_header_waiter */ tx_sync_headers,
@@ -118,7 +118,7 @@ async fn process_header_missing_parent() {
 
     // Spawn the core.
     Core::spawn(
-        name,
+        name.clone(),
         committee(),
         store.clone(),
         synchronizer,
@@ -135,7 +135,7 @@ async fn process_header_missing_parent() {
 
     // Send a header to the core.
     let header = Header {
-        parents: [Digest::default()].iter().cloned().collect(),
+        parents: [Digest0::default()].iter().cloned().collect(),
         ..header()
     };
     let id = header.id.clone();
@@ -169,7 +169,7 @@ async fn process_header_missing_payload() {
 
     // Make a synchronizer for the core.
     let synchronizer = Synchronizer::new(
-        name,
+        name.clone(),
         &committee(),
         store.clone(),
         /* tx_header_waiter */ tx_sync_headers,
@@ -178,7 +178,7 @@ async fn process_header_missing_payload() {
 
     // Spawn the core.
     Core::spawn(
-        name,
+        name.clone(),
         committee(),
         store.clone(),
         synchronizer,
@@ -195,7 +195,7 @@ async fn process_header_missing_payload() {
 
     // Send a header to the core.
     let header = Header {
-        payload: [(Digest::default(), 0)].iter().cloned().collect(),
+        payload: [(Digest0::default(), 0)].iter().cloned().collect(),
         ..header()
     };
     let id = header.id.clone();
@@ -231,7 +231,7 @@ async fn process_votes() {
 
     // Make a synchronizer for the core.
     let synchronizer = Synchronizer::new(
-        name,
+        name.clone(),
         &committee,
         store.clone(),
         /* tx_header_waiter */ tx_sync_headers,
@@ -240,7 +240,7 @@ async fn process_votes() {
 
     // Spawn the core.
     Core::spawn(
-        name,
+        name.clone(),
         committee.clone(),
         store.clone(),
         synchronizer,
@@ -303,7 +303,7 @@ async fn process_certificates() {
 
     // Make a synchronizer for the core.
     let synchronizer = Synchronizer::new(
-        name,
+        name.clone(),
         &committee(),
         store.clone(),
         /* tx_header_waiter */ tx_sync_headers,
@@ -312,7 +312,7 @@ async fn process_certificates() {
 
     // Spawn the core.
     Core::spawn(
-        name,
+        name.clone(),
         committee(),
         store.clone(),
         synchronizer,

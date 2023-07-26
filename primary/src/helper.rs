@@ -2,7 +2,7 @@
 use crate::primary::PrimaryMessage;
 use bytes::Bytes;
 use config::Committee;
-use crypto::{Digest, PublicKey};
+use crypto::{Digest0, PublicKey};
 use log::{error, warn};
 use network::SimpleSender;
 use store::Store;
@@ -15,7 +15,7 @@ pub struct Helper {
     /// The persistent storage.
     store: Store,
     /// Input channel to receive certificates requests.
-    rx_primaries: Receiver<(Vec<Digest>, PublicKey)>,
+    rx_primaries: Receiver<(Vec<Digest0>, PublicKey)>,
     /// A network sender to reply to the sync requests.
     network: SimpleSender,
 }
@@ -24,7 +24,7 @@ impl Helper {
     pub fn spawn(
         committee: Committee,
         store: Store,
-        rx_primaries: Receiver<(Vec<Digest>, PublicKey)>,
+        rx_primaries: Receiver<(Vec<Digest0>, PublicKey)>,
     ) {
         tokio::spawn(async move {
             Self {

@@ -1,7 +1,7 @@
 // Copyright(C) Facebook, Inc. and its affiliates.
 use bytes::Bytes;
 use config::{Committee, WorkerId};
-use crypto::{Digest, PublicKey};
+use crypto::{Digest0, PublicKey};
 use log::{error, warn};
 use network::SimpleSender;
 use store::Store;
@@ -20,7 +20,7 @@ pub struct Helper {
     /// The persistent storage.
     store: Store,
     /// Input channel to receive batch requests.
-    rx_request: Receiver<(Vec<Digest>, PublicKey)>,
+    rx_request: Receiver<(Vec<Digest0>, PublicKey)>,
     /// A network sender to send the batches to the other workers.
     network: SimpleSender,
 }
@@ -30,7 +30,7 @@ impl Helper {
         id: WorkerId,
         committee: Committee,
         store: Store,
-        rx_request: Receiver<(Vec<Digest>, PublicKey)>,
+        rx_request: Receiver<(Vec<Digest0>, PublicKey)>,
     ) {
         tokio::spawn(async move {
             Self {

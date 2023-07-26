@@ -23,6 +23,11 @@ primary = { path = "../primary" }
 worker = { path = "../worker" }
 consensus = { path = "../consensus" }
 
+hashrand = { package = "hashrand", git = "https://github.com/akhilsb/async-cc-hash.git" }
+glowlib = {package = "glow_lib", git = "https://github.com/akhilsb/async-cc-hash.git"}
+hconfig = {package = "config", git = "https://github.com/akhilsb/async-cc-hash.git"}
+signal-hook = "0"
+
 [features]
 benchmark = ["worker/benchmark", "primary/benchmark", "consensus/benchmark"]
 

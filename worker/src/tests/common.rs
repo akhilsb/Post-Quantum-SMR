@@ -3,7 +3,7 @@ use crate::batch_maker::{Batch, Transaction};
 use crate::worker::WorkerMessage;
 use bytes::Bytes;
 use config::{Authority, Committee, PrimaryAddresses, WorkerAddresses};
-use crypto::{generate_keypair, Digest, PublicKey, SecretKey};
+use crypto::{generate_keypair, Digest0, PublicKey, SecretKey};
 use ed25519_dalek::Digest as _;
 use ed25519_dalek::Sha512;
 use futures::sink::SinkExt as _;
@@ -45,7 +45,7 @@ pub fn committee() -> Committee {
                 .cloned()
                 .collect();
                 (
-                    *id,
+                    id.clone(),
                     Authority {
                         stake: 1,
                         primary,
@@ -100,8 +100,8 @@ pub fn serialized_batch() -> Vec<u8> {
 }
 
 // Fixture
-pub fn batch_digest() -> Digest {
-    Digest(
+pub fn batch_digest() -> Digest0 {
+    Digest0(
         Sha512::digest(&serialized_batch()).as_slice()[..32]
             .try_into()
             .unwrap(),

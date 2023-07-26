@@ -4,7 +4,7 @@ use crate::messages::Header;
 use crate::primary::{PrimaryMessage, PrimaryWorkerMessage, Round};
 use bytes::Bytes;
 use config::{Committee, WorkerId};
-use crypto::{Digest, PublicKey};
+use crypto::{Digest0, PublicKey};
 use futures::future::try_join_all;
 use futures::stream::futures_unordered::FuturesUnordered;
 use futures::stream::StreamExt as _;
@@ -25,8 +25,8 @@ const TIMER_RESOLUTION: u64 = 1_000;
 /// The commands that can be sent to the `Waiter`.
 #[derive(Debug)]
 pub enum WaiterMessage {
-    SyncBatches(HashMap<Digest, WorkerId>, Header),
-    SyncParents(Vec<Digest>, Header),
+    SyncBatches(HashMap<Digest0, WorkerId>, Header),
+    SyncParents(Vec<Digest0>, Header),
 }
 
 /// Waits for missing parent certificates and batches' digests.
@@ -55,13 +55,13 @@ pub struct HeaderWaiter {
     network: SimpleSender,
     /// Keeps the digests of the all certificates for which we sent a sync request,
     /// along with a timestamp (`u128`) indicating when we sent the request.
-    parent_requests: HashMap<Digest, (Round, u128)>,
+    parent_requests: HashMap<Digest0, (Round, u128)>,
     /// Keeps the digests of the all tx batches for which we sent a sync request,
     /// similarly to `header_requests`.
-    batch_requests: HashMap<Digest, Round>,
+    batch_requests: HashMap<Digest0, Round>,
     /// List of digests (either certificates, headers or tx batch) that are waiting
     /// to be processed. Their processing will resume when we get all their dependencies.
-    pending: HashMap<Digest, (Round, Sender<()>)>,
+    pending: HashMap<Digest0, (Round, Sender<()>)>,
 }
 
 impl HeaderWaiter {
@@ -132,7 +132,7 @@ impl HeaderWaiter {
                             debug!("Synching the payload of {}", header);
                             let header_id = header.id.clone();
                             let round = header.round;
-                            let author = header.author;
+                            let author = header.author.clone();
 
                             // Ensure we sync only once per header.
                             if self.pending.contains_key(&header_id) {
@@ -166,7 +166,7 @@ impl HeaderWaiter {
                                     .worker(&author, &worker_id)
                                     .expect("Author of valid header is not in the committee")
                                     .primary_to_worker;
-                                let message = PrimaryWorkerMessage::Synchronize(digests, author);
+                                let message = PrimaryWorkerMessage::Synchronize(digests, author.clone());
                                 let bytes = bincode::serialize(&message)
                                     .expect("Failed to serialize batch sync request");
                                 self.network.send(address, Bytes::from(bytes)).await;
@@ -177,7 +177,7 @@ impl HeaderWaiter {
                             debug!("Synching the parents of {}", header);
                             let header_id = header.id.clone();
                             let round = header.round;
-                            let author = header.author;
+                            let author = header.author.clone();
 
                             // Ensure we sync only once per header.
                             if self.pending.contains_key(&header_id) {
@@ -215,7 +215,7 @@ impl HeaderWaiter {
                                     .primary(&author)
                                     .expect("Author of valid header not in the committee")
                                     .primary_to_primary;
-                                let message = PrimaryMessage::CertificatesRequest(requires_sync, self.name);
+                                let message = PrimaryMessage::CertificatesRequest(requires_sync, self.name.clone());
                                 let bytes = bincode::serialize(&message).expect("Failed to serialize cert request");
                                 self.network.send(address, Bytes::from(bytes)).await;
                             }
@@ -265,7 +265,7 @@ impl HeaderWaiter {
                         .iter()
                         .map(|(_, x)| x.primary_to_primary)
                         .collect();
-                    let message = PrimaryMessage::CertificatesRequest(retry, self.name);
+                    let message = PrimaryMessage::CertificatesRequest(retry, self.name.clone());
                     let bytes = bincode::serialize(&message).expect("Failed to serialize cert request");
                     self.network.lucky_broadcast(addresses, Bytes::from(bytes), self.sync_retry_nodes).await;
 

@@ -42,7 +42,7 @@ async fn propose_payload() {
 
     // Spawn the proposer.
     Proposer::spawn(
-        name,
+        name.clone(),
         &committee(),
         signature_service,
         /* header_size */ 32,
@@ -53,7 +53,7 @@ async fn propose_payload() {
     );
 
     // Send enough digests for the header payload.
-    let digest = Digest(name.0);
+    let digest = name.digest();
     let worker_id = 0;
     tx_our_digests
         .send((digest.clone(), worker_id))

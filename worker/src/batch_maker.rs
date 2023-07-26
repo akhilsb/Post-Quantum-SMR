@@ -3,8 +3,8 @@ use crate::quorum_waiter::QuorumWaiterMessage;
 use crate::worker::WorkerMessage;
 use bytes::Bytes;
 #[cfg(feature = "benchmark")]
-use crypto::Digest;
-use crypto::PublicKey;
+use crypto::Digest0;
+use crypto::{PublicKey};
 #[cfg(feature = "benchmark")]
 use ed25519_dalek::{Digest as _, Sha512};
 #[cfg(feature = "benchmark")]
@@ -121,7 +121,7 @@ impl BatchMaker {
         #[cfg(feature = "benchmark")]
         {
             // NOTE: This is one extra hash that is only needed to print the following log entries.
-            let digest = Digest(
+            let digest = Digest0(
                 Sha512::digest(&serialized).as_slice()[..32]
                     .try_into()
                     .unwrap(),

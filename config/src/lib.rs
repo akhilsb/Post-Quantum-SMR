@@ -4,8 +4,8 @@ use log::info;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
-use std::fs::{self, OpenOptions};
-use std::io::BufWriter;
+use std::fs::{self, OpenOptions, File};
+use std::io::{BufWriter, self, BufRead};
 use std::io::Write as _;
 use std::net::SocketAddr;
 use thiserror::Error;
@@ -160,7 +160,7 @@ impl Committee {
         self.authorities
             .iter()
             .filter(|(name, _)| name != &myself)
-            .map(|(name, authority)| (*name, authority.stake))
+            .map(|(name, authority)| (name.clone(), authority.stake))
             .collect()
     }
 
@@ -185,7 +185,7 @@ impl Committee {
         self.authorities
             .get(to)
             .map(|x| x.primary.clone())
-            .ok_or_else(|| ConfigError::NotInCommittee(*to))
+            .ok_or_else(|| ConfigError::NotInCommittee(to.clone()))
     }
 
     /// Returns the addresses of all primaries except `myself`.
@@ -193,7 +193,7 @@ impl Committee {
         self.authorities
             .iter()
             .filter(|(name, _)| name != &myself)
-            .map(|(name, authority)| (*name, authority.primary.clone()))
+            .map(|(name, authority)| (name.clone(), authority.primary.clone()))
             .collect()
     }
 
@@ -203,12 +203,12 @@ impl Committee {
             .iter()
             .find(|(name, _)| name == &to)
             .map(|(_, authority)| authority)
-            .ok_or_else(|| ConfigError::NotInCommittee(*to))?
+            .ok_or_else(|| ConfigError::NotInCommittee(to.clone()))?
             .workers
             .iter()
             .find(|(worker_id, _)| worker_id == &id)
             .map(|(_, worker)| worker.clone())
-            .ok_or_else(|| ConfigError::NotInCommittee(*to))
+            .ok_or_else(|| ConfigError::NotInCommittee(to.clone()))
     }
 
     /// Returns the addresses of all our workers.
@@ -217,7 +217,7 @@ impl Committee {
             .iter()
             .find(|(name, _)| name == &myself)
             .map(|(_, authority)| authority)
-            .ok_or_else(|| ConfigError::NotInCommittee(*myself))?
+            .ok_or_else(|| ConfigError::NotInCommittee(myself.clone()))?
             .workers
             .values()
             .cloned()
@@ -240,7 +240,7 @@ impl Committee {
                     .workers
                     .iter()
                     .find(|(worker_id, _)| worker_id == &id)
-                    .map(|(_, addresses)| (*name, addresses.clone()))
+                    .map(|(_, addresses)| (name.clone(), addresses.clone()))
             })
             .collect()
     }
@@ -260,7 +260,10 @@ impl Export for KeyPair {}
 impl KeyPair {
     pub fn new() -> Self {
         let (name, secret) = generate_production_keypair();
-        Self { name, secret }
+        Self { 
+            name, 
+            secret,
+        }
     }
 }
 
@@ -268,4 +271,15 @@ impl Default for KeyPair {
     fn default() -> Self {
         Self::new()
     }
+}
+
+pub fn file_to_ips(filename:String) -> Vec<String> {
+    let f = File::open(filename).expect("Failed to open the file");
+    let mut ips = Vec::new();
+    for line in io::BufReader::new(f).lines() {
+        if let Ok(s) = line {
+            ips.push(s.trim().to_string());
+        }
+    }
+    ips
 }

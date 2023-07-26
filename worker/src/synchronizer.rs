@@ -2,7 +2,7 @@
 use crate::worker::{Round, WorkerMessage};
 use bytes::Bytes;
 use config::{Committee, WorkerId};
-use crypto::{Digest, PublicKey};
+use crypto::{Digest0, PublicKey};
 use futures::stream::futures_unordered::FuturesUnordered;
 use futures::stream::StreamExt as _;
 use log::{debug, error};
@@ -47,7 +47,7 @@ pub struct Synchronizer {
     /// Keeps the digests (of batches) that are waiting to be processed by the primary. Their
     /// processing will resume when we get the missing batches in the store or we no longer need them.
     /// It also keeps the round number and a timestamp (`u128`) of each request we sent.
-    pending: HashMap<Digest, (Round, Sender<()>, u128)>,
+    pending: HashMap<Digest0, (Round, Sender<()>, u128)>,
 }
 
 impl Synchronizer {
@@ -84,11 +84,11 @@ impl Synchronizer {
     /// Helper function. It waits for a batch to become available in the storage
     /// and then delivers its digest.
     async fn waiter(
-        missing: Digest,
+        missing: Digest0,
         mut store: Store,
-        deliver: Digest,
+        deliver: Digest0,
         mut handler: Receiver<()>,
-    ) -> Result<Option<Digest>, StoreError> {
+    ) -> Result<Option<Digest0>, StoreError> {
         tokio::select! {
             result = store.notify_read(missing.to_vec()) => {
                 result.map(|_| Some(deliver))
@@ -153,7 +153,7 @@ impl Synchronizer {
                                 continue;
                             }
                         };
-                        let message = WorkerMessage::BatchRequest(missing, self.name);
+                        let message = WorkerMessage::BatchRequest(missing, self.name.clone());
                         let serialized = bincode::serialize(&message).expect("Failed to serialize our own message");
                         self.network.send(address, Bytes::from(serialized)).await;
                     },
@@ -210,7 +210,7 @@ impl Synchronizer {
                             .others_workers(&self.name, &self.id)
                             .iter().map(|(_, address)| address.worker_to_worker)
                             .collect();
-                        let message = WorkerMessage::BatchRequest(retry, self.name);
+                        let message = WorkerMessage::BatchRequest(retry, self.name.clone());
                         let serialized = bincode::serialize(&message).expect("Failed to serialize our own message");
                         self.network
                             .lucky_broadcast(addresses, Bytes::from(serialized), self.sync_retry_nodes)

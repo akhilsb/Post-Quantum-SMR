@@ -12,7 +12,7 @@ use crate::synchronizer::Synchronizer;
 use async_trait::async_trait;
 use bytes::Bytes;
 use config::{Committee, KeyPair, Parameters, WorkerId};
-use crypto::{Digest, PublicKey, SignatureService};
+use crypto::{Digest0, PublicKey, SignatureService};
 use futures::sink::SinkExt as _;
 use log::info;
 use network::{MessageHandler, Receiver as NetworkReceiver, Writer};
@@ -34,14 +34,14 @@ pub enum PrimaryMessage {
     Header(Header),
     Vote(Vote),
     Certificate(Certificate),
-    CertificatesRequest(Vec<Digest>, /* requestor */ PublicKey),
+    CertificatesRequest(Vec<Digest0>, /* requestor */ PublicKey),
 }
 
 /// The messages sent by the primary to its workers.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum PrimaryWorkerMessage {
     /// The primary indicates that the worker need to sync the target missing batches.
-    Synchronize(Vec<Digest>, /* target */ PublicKey),
+    Synchronize(Vec<Digest0>, /* target */ PublicKey),
     /// The primary indicates a round update.
     Cleanup(Round),
 }
@@ -50,9 +50,9 @@ pub enum PrimaryWorkerMessage {
 #[derive(Debug, Serialize, Deserialize)]
 pub enum WorkerPrimaryMessage {
     /// The worker indicates it sealed a new batch.
-    OurBatch(Digest, WorkerId),
+    OurBatch(Digest0, WorkerId),
     /// The worker indicates it received a batch's digest from another authority.
-    OthersBatch(Digest, WorkerId),
+    OthersBatch(Digest0, WorkerId),
 }
 
 pub struct Primary;
@@ -104,7 +104,7 @@ impl Primary {
         );
         info!(
             "Primary {} listening to primary messages on {}",
-            name, address
+            name.clone(), address
         );
 
         // Spawn the network receiver listening to messages from our workers.
@@ -128,7 +128,7 @@ impl Primary {
 
         // The `Synchronizer` provides auxiliary methods helping to `Core` to sync.
         let synchronizer = Synchronizer::new(
-            name,
+            name.clone(),
             &committee,
             store.clone(),
             /* tx_header_waiter */ tx_sync_headers,
@@ -140,7 +140,7 @@ impl Primary {
 
         // The `Core` receives and handles headers, votes, and certificates from the other primaries.
         Core::spawn(
-            name,
+            name.clone(),
             committee.clone(),
             store.clone(),
             synchronizer,
@@ -165,7 +165,7 @@ impl Primary {
         // batch digests, it commands the `HeaderWaiter` to synchronizer with other nodes, wait for their reply, and
         // re-schedule execution of the header once we have all missing data.
         HeaderWaiter::spawn(
-            name,
+            name.clone(),
             committee.clone(),
             store.clone(),
             consensus_round,
@@ -187,7 +187,7 @@ impl Primary {
         // When the `Core` collects enough parent certificates, the `Proposer` generates a new header with new batch
         // digests from our workers and it back to the `Core`.
         Proposer::spawn(
-            name,
+            name.clone(),
             &committee,
             signature_service,
             parameters.header_size,
@@ -217,7 +217,7 @@ impl Primary {
 #[derive(Clone)]
 struct PrimaryReceiverHandler {
     tx_primary_messages: Sender<PrimaryMessage>,
-    tx_cert_requests: Sender<(Vec<Digest>, PublicKey)>,
+    tx_cert_requests: Sender<(Vec<Digest0>, PublicKey)>,
 }
 
 #[async_trait]
@@ -246,8 +246,8 @@ impl MessageHandler for PrimaryReceiverHandler {
 /// Defines how the network receiver handles incoming workers messages.
 #[derive(Clone)]
 struct WorkerReceiverHandler {
-    tx_our_digests: Sender<(Digest, WorkerId)>,
-    tx_others_digests: Sender<(Digest, WorkerId)>,
+    tx_our_digests: Sender<(Digest0, WorkerId)>,
+    tx_others_digests: Sender<(Digest0, WorkerId)>,
 }
 
 #[async_trait]

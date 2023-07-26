@@ -12,3 +12,4 @@ serde_json = "1.0.64"
 log = "0.4.14"
 
 crypto = { path = "../crypto" }
+picnic = {package = "picnic-bindings", git = "https://github.com/ait-crypto/picnic-bindings-rs.git", features=["picnic3"]}

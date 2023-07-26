@@ -54,7 +54,7 @@ pub fn committee() -> Committee {
                 .cloned()
                 .collect();
                 (
-                    *id,
+                    id.clone(),
                     Authority {
                         stake: 1,
                         primary,
@@ -94,7 +94,7 @@ pub fn committee_with_base_port(base_port: u16) -> Committee {
 
 // Fixture
 pub fn header() -> Header {
-    let (author, secret) = keys().pop().unwrap();
+    let (author, mut secret) = keys().pop().unwrap();
     let header = Header {
         author,
         round: 1,
@@ -106,7 +106,7 @@ pub fn header() -> Header {
     };
     Header {
         id: header.digest(),
-        signature: Signature::new(&header.digest(), &secret),
+        signature: Signature::new(&header.digest(), &mut secret),
         ..header
     }
 }
@@ -115,7 +115,7 @@ pub fn header() -> Header {
 pub fn headers() -> Vec<Header> {
     keys()
         .into_iter()
-        .map(|(author, secret)| {
+        .map(|(author, mut secret)| {
             let header = Header {
                 author,
                 round: 1,
@@ -127,7 +127,7 @@ pub fn headers() -> Vec<Header> {
             };
             Header {
                 id: header.digest(),
-                signature: Signature::new(&header.digest(), &secret),
+                signature: Signature::new(&header.digest(), &mut secret),
                 ..header
             }
         })
@@ -138,16 +138,16 @@ pub fn headers() -> Vec<Header> {
 pub fn votes(header: &Header) -> Vec<Vote> {
     keys()
         .into_iter()
-        .map(|(author, secret)| {
+        .map(|(author, mut secret)| {
             let vote = Vote {
                 id: header.id.clone(),
                 round: header.round,
-                origin: header.author,
+                origin: header.author.clone(),
                 author,
                 signature: Signature::default(),
             };
             Vote {
-                signature: Signature::new(&vote.digest(), &secret),
+                signature: Signature::new(&vote.digest(), &mut secret),
                 ..vote
             }
         })

@@ -4,7 +4,7 @@ use crate::header_waiter::WaiterMessage;
 use crate::messages::{Certificate, Header};
 use config::Committee;
 use crypto::Hash as _;
-use crypto::{Digest, PublicKey};
+use crypto::{Digest0, PublicKey};
 use std::collections::HashMap;
 use store::Store;
 use tokio::sync::mpsc::Sender;
@@ -21,7 +21,7 @@ pub struct Synchronizer {
     /// Send commands to the `CertificateWaiter`.
     tx_certificate_waiter: Sender<Certificate>,
     /// The genesis and its digests.
-    genesis: Vec<(Digest, Certificate)>,
+    genesis: Vec<(Digest0, Certificate)>,
 }
 
 impl Synchronizer {

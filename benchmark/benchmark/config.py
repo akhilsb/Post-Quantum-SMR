@@ -78,11 +78,10 @@ class Committee:
                     'worker_to_worker': f'{host}:{port + 2}',
                 }
                 port += 3
-
             self.json['authorities'][name] = {
                 'stake': 1,
                 'primary': primary_addr,
-                'workers': workers_addr
+                'workers': workers_addr,
             }
 
     def primary_addresses(self, faults=0):

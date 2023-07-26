@@ -8,7 +8,7 @@ use crate::synchronizer::Synchronizer;
 use async_trait::async_trait;
 use bytes::Bytes;
 use config::{Committee, Parameters, WorkerId};
-use crypto::{Digest, PublicKey};
+use crypto::{Digest0, PublicKey};
 use futures::sink::SinkExt as _;
 use log::{error, info, warn};
 use network::{MessageHandler, Receiver, Writer};
@@ -36,7 +36,7 @@ pub type SerializedBatchDigestMessage = Vec<u8>;
 #[derive(Debug, Serialize, Deserialize)]
 pub enum WorkerMessage {
     Batch(Batch),
-    BatchRequest(Vec<Digest>, /* origin */ PublicKey),
+    BatchRequest(Vec<Digest0>, /* origin */ PublicKey),
 }
 
 pub struct Worker {
@@ -118,7 +118,7 @@ impl Worker {
         // The `Synchronizer` is responsible to keep the worker in sync with the others. It handles the commands
         // it receives from the primary (which are mainly notifications that we are out of sync).
         Synchronizer::spawn(
-            self.name,
+            self.name.clone(),
             self.id,
             self.committee.clone(),
             self.store.clone(),
@@ -164,7 +164,7 @@ impl Worker {
             self.committee
                 .others_workers(&self.name, &self.id)
                 .iter()
-                .map(|(name, addresses)| (*name, addresses.worker_to_worker))
+                .map(|(name, addresses)| (name.clone(), addresses.worker_to_worker))
                 .collect(),
         );
 
@@ -263,7 +263,7 @@ impl MessageHandler for TxReceiverHandler {
 /// Defines how the network receiver handles incoming workers messages.
 #[derive(Clone)]
 struct WorkerReceiverHandler {
-    tx_helper: Sender<(Vec<Digest>, PublicKey)>,
+    tx_helper: Sender<(Vec<Digest0>, PublicKey)>,
     tx_processor: Sender<SerializedBatchMessage>,
 }
 

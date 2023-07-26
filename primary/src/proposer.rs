@@ -3,7 +3,7 @@ use crate::messages::{Certificate, Header};
 use crate::primary::Round;
 use config::{Committee, WorkerId};
 use crypto::Hash as _;
-use crypto::{Digest, PublicKey, SignatureService};
+use crypto::{Digest0, PublicKey, SignatureService};
 use log::debug;
 #[cfg(feature = "benchmark")]
 use log::info;
@@ -26,18 +26,18 @@ pub struct Proposer {
     max_header_delay: u64,
 
     /// Receives the parents to include in the next header (along with their round number).
-    rx_core: Receiver<(Vec<Digest>, Round)>,
+    rx_core: Receiver<(Vec<Digest0>, Round)>,
     /// Receives the batches' digests from our workers.
-    rx_workers: Receiver<(Digest, WorkerId)>,
+    rx_workers: Receiver<(Digest0, WorkerId)>,
     /// Sends newly created headers to the `Core`.
     tx_core: Sender<Header>,
 
     /// The current round of the dag.
     round: Round,
     /// Holds the certificates' ids waiting to be included in the next header.
-    last_parents: Vec<Digest>,
+    last_parents: Vec<Digest0>,
     /// Holds the batches' digests waiting to be included in the next header.
-    digests: Vec<(Digest, WorkerId)>,
+    digests: Vec<(Digest0, WorkerId)>,
     /// Keeps track of the size (in bytes) of batches' digests that we received so far.
     payload_size: usize,
 }
@@ -50,8 +50,8 @@ impl Proposer {
         signature_service: SignatureService,
         header_size: usize,
         max_header_delay: u64,
-        rx_core: Receiver<(Vec<Digest>, Round)>,
-        rx_workers: Receiver<(Digest, WorkerId)>,
+        rx_core: Receiver<(Vec<Digest0>, Round)>,
+        rx_workers: Receiver<(Digest0, WorkerId)>,
         tx_core: Sender<Header>,
     ) {
         let genesis = Certificate::genesis(committee)
@@ -81,7 +81,7 @@ impl Proposer {
     async fn make_header(&mut self) {
         // Make a new header.
         let header = Header::new(
-            self.name,
+            self.name.clone(),
             self.round,
             self.digests.drain(..).collect(),
             self.last_parents.drain(..).collect(),

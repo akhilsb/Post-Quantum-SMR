@@ -181,8 +181,8 @@ class Bench:
             subprocess.run(cmd, check=True)
             keys += [Key.from_file(filename)]
 
-        names = [x.name for x in keys]
-
+        names = [(x.name,x.pq_pubkey) for x in keys]
+        #pq_pubkeys = [x.pq_pubkey for x in keys]
         if bench_parameters.collocate:
             workers = bench_parameters.workers
             addresses = OrderedDict(
@@ -194,7 +194,16 @@ class Bench:
             )
         committee = Committee(addresses, self.settings.base_port)
         committee.print(PathMaker.committee_file())
-
+        ip_file = ""
+        for x in range(len(hosts)):
+            port = self.settings.base_port + x
+            syncer_port = self.settings.client_base_port + x
+            ip_file += hosts[x]+ ":"+ str(port) + "\n"
+            syncer += hosts[x] + ":" + str(syncer_port) + "\n"
+        ip_file += hosts[0] + ":" + str(self.settings.client_run_port) + "\n"
+        with open("ip_file", 'w') as f:
+            f.write(ip_file)
+        f.close()
         node_parameters.print(PathMaker.parameters_file())
 
         # Cleanup all nodes and upload configuration files.
@@ -207,7 +216,8 @@ class Bench:
                 c.put(PathMaker.committee_file(), '.')
                 c.put(PathMaker.key_file(i), '.')
                 c.put(PathMaker.parameters_file(), '.')
-
+                c.put(PathMaker.hashrand_config_file(i),'.')
+                c.put("ip_file",'.')
         return committee
 
     def _run_single(self, rate, committee, bench_parameters, debug=False):
@@ -244,6 +254,7 @@ class Bench:
                 PathMaker.committee_file(),
                 PathMaker.db_path(i),
                 PathMaker.parameters_file(),
+                PathMaker.hashrand_config_file(i),
                 debug=debug
             )
             log_file = PathMaker.primary_log_file(i)
@@ -260,6 +271,7 @@ class Bench:
                     PathMaker.db_path(i, id),
                     PathMaker.parameters_file(),
                     id,  # The worker's id.
+                    PathMaker.hashrand_config_file(i),
                     debug=debug
                 )
                 log_file = PathMaker.worker_log_file(i, id)

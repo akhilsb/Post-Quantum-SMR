@@ -31,6 +31,11 @@ class PathMaker:
     def key_file(i):
         assert isinstance(i, int) and i >= 0
         return f'.node-{i}.json'
+    
+    @staticmethod
+    def hashrand_config_file(i):
+        assert isinstance(i, int) and i >= 0
+        return f'nodes-{i}.json'
 
     @staticmethod
     def db_path(i, j=None):
