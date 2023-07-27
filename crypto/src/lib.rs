@@ -270,7 +270,7 @@ use rand::{CryptoRng, RngCore};
 use serde::{de, ser};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::sync::oneshot;
-use picnic::PicnicL3FS;
+use picnic::Picnic3L3;
 use sha2::{Sha256, Digest};
 use std::cmp::Ordering;
 
@@ -278,7 +278,7 @@ use std::cmp::Ordering;
 #[derive(Clone, Eq, PartialEq)]
 pub struct PublicKey{
     //pub pubkey: Vec<u8>,
-    pub pubkey: VerificationKey<PicnicL3FS>,
+    pub pubkey: VerificationKey<Picnic3L3>,
 }
 
 impl PublicKey {
@@ -288,7 +288,7 @@ impl PublicKey {
 
     pub fn decode_base64(s: &str) -> Result<Self, base64::DecodeError> {
         let bytes = base64::decode(s)?;
-        let array = VerificationKey::<PicnicL3FS>::try_from(bytes.as_slice()) 
+        let array = VerificationKey::<Picnic3L3>::try_from(bytes.as_slice()) 
             .map_err(|_| base64::DecodeError::InvalidLength)?;
         Ok(Self{pubkey:array})
     }
@@ -361,14 +361,14 @@ impl std::default::Default for PublicKey{
     fn default() -> Self {
         let def_str = "AyqyiGUIcpnmqBcjY9s10sTjGlFp5FMF1xpraoxtL7hRofuDFwxCjHutXQDU0k1ENg==";
         let dec = base64::decode(def_str).unwrap();
-        Self { pubkey: VerificationKey::<PicnicL3FS>::try_from(dec.as_slice()).unwrap() }
+        Self { pubkey: VerificationKey::<Picnic3L3>::try_from(dec.as_slice()).unwrap() }
     }
 }
 
 /// Represents a secret key (in bytes).
 
 pub struct SecretKey{
-    secret: SigningKey<PicnicL3FS>,
+    secret: SigningKey<Picnic3L3>,
 }
 
 impl SecretKey {
@@ -378,7 +378,7 @@ impl SecretKey {
 
     pub fn decode_base64(s: &str) -> Result<Self, base64::DecodeError> {
         let bytes = base64::decode(s)?;
-        let array = SigningKey::<PicnicL3FS>::try_from(bytes.as_slice()).expect("Unable to deserialize secret key");
+        let array = SigningKey::<Picnic3L3>::try_from(bytes.as_slice()).expect("Unable to deserialize secret key");
         Ok(SecretKey { secret: array })
     }
 }
@@ -410,8 +410,8 @@ impl Drop for SecretKey {
 }
 
 pub struct KeyPair{
-    pub pubkey: VerificationKey<PicnicL3FS>,
-    pub seckey: SigningKey<PicnicL3FS>
+    pub pubkey: VerificationKey<Picnic3L3>,
+    pub seckey: SigningKey<Picnic3L3>
 }
 
 pub fn generate_production_keypair() -> (PublicKey, SecretKey) {
@@ -425,7 +425,7 @@ where
     //let keypair = dalek::Keypair::generate(csprng);
     //let public = PublicKey(keypair.public.to_bytes());
     //let secret = SecretKey(keypair.to_bytes());
-    let (secret, public) = SigningKey::<PicnicL3FS>::random().expect("Unable to conduct keygen");
+    let (secret, public) = SigningKey::<Picnic3L3>::random().expect("Unable to conduct keygen");
     (PublicKey{pubkey: public},SecretKey{secret:secret})
 }
 

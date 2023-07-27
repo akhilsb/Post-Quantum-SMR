@@ -100,7 +100,7 @@ def remote(ctx, debug=False):
         'collocate': True,
         'rate': [10_000],
         'tx_size': 512,
-        'duration': 100,
+        'duration': 300,
         'runs': 1,
     }
     node_params = {
@@ -109,7 +109,7 @@ def remote(ctx, debug=False):
         'gc_depth': 50,  # rounds
         'sync_retry_delay': 10_000,  # ms
         'sync_retry_nodes': 3,  # number of nodes
-        'batch_size': 2_000_000,  # bytes
+        'batch_size': 30_000,  # bytes
         'max_batch_delay': 200  # ms
     }
     try:
