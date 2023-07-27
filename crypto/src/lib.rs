@@ -359,7 +359,8 @@ impl PartialOrd for PublicKey{
 
 impl std::default::Default for PublicKey{
     fn default() -> Self {
-        let def_str = "AyqyiGUIcpnmqBcjY9s10sTjGlFp5FMF1xpraoxtL7hRofuDFwxCjHutXQDU0k1ENg==";
+        //let def_str = "AyqyiGUIcpnmqBcjY9s10sTjGlFp5FMF1xpraoxtL7hRofuDFwxCjHutXQDU0k1ENg==";
+        let def_str = "CNE1sTCUPTlbOx1NnLpbilFWrs0jSYk0igB2A7B5C5WzQEG5TD8YaxIJCYwVd9ikrA==";
         let dec = base64::decode(def_str).unwrap();
         Self { pubkey: VerificationKey::<Picnic3L3>::try_from(dec.as_slice()).unwrap() }
     }
