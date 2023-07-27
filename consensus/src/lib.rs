@@ -222,7 +222,9 @@ impl Consensus {
             Some(x) => x,
             None => return,
         };
-
+        if !state.dag.contains_key(&(r-1)){
+            log::warn!("Certificate did not reach this point yet {}",r-1);
+        }
         // Check if the leader has f+1 support from its children (ie. round r-1).
         let stake: Stake = state
             .dag

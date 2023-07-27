@@ -150,6 +150,7 @@ class Bench:
             f'(cd {self.settings.repo_name} && git checkout -f {self.settings.branch})',
             f'(cd {self.settings.repo_name} && git pull -f)',
             'source $HOME/.cargo/env',
+            f'(cd {self.settings.repo_name} && {CommandMaker.update()})',
             f'(cd {self.settings.repo_name}/node && {CommandMaker.compile()})',
             CommandMaker.alias_binaries(
                 f'./{self.settings.repo_name}/target/release/'
@@ -181,7 +182,7 @@ class Bench:
             subprocess.run(cmd, check=True)
             keys += [Key.from_file(filename)]
 
-        names = [(x.name,x.pq_pubkey) for x in keys]
+        names = [x.name for x in keys]
         #pq_pubkeys = [x.pq_pubkey for x in keys]
         if bench_parameters.collocate:
             workers = bench_parameters.workers
@@ -196,10 +197,8 @@ class Bench:
         committee.print(PathMaker.committee_file())
         ip_file = ""
         for x in range(len(hosts)):
-            port = self.settings.base_port + x
-            syncer_port = self.settings.client_base_port + x
+            port = self.settings.hrnd_port + x
             ip_file += hosts[x]+ ":"+ str(port) + "\n"
-            syncer += hosts[x] + ":" + str(syncer_port) + "\n"
         ip_file += hosts[0] + ":" + str(self.settings.client_run_port) + "\n"
         with open("ip_file", 'w') as f:
             f.write(ip_file)

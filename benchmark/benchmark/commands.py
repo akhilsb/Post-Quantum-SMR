@@ -19,6 +19,10 @@ class CommandMaker:
     @staticmethod
     def compile():
         return 'cargo build --quiet --release --features benchmark'
+    
+    @staticmethod
+    def update():
+        return 'cargo update'
 
     @staticmethod
     def generate_key(filename):
@@ -31,7 +35,7 @@ class CommandMaker:
         assert isinstance(committee, str)
         assert isinstance(parameters, str)
         assert isinstance(debug, bool)
-        v = '-vv' if debug else '-v'
+        v = '-vvv' if debug else '-vv'
         return (f'./node {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --hashrand_conf {hashrand_conf} --hashrand_batch 100 --hashrand_freq 10 primary')
 
