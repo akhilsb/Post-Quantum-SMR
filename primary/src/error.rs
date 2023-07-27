@@ -1,6 +1,6 @@
 // Copyright(C) Facebook, Inc. and its affiliates.
 use crate::primary::Round;
-use crypto::{CryptoError, Digest0, PublicKey, PicnicError};
+use crypto::{CryptoError, Digest0, PublicKey, PicnicError, DiLithiumError};
 use store::StoreError;
 use thiserror::Error;
 
@@ -29,6 +29,9 @@ pub enum DagError {
 
     #[error("Invalid PQ signature")]
     InvalidPQSignature(#[from] PicnicError),
+
+    #[error("Invalid Dilithium signature")]
+    InvalidDLSignature(#[from] DiLithiumError),
 
     #[error("Storage failure: {0}")]
     StoreError(#[from] StoreError),

@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 // Copyright(C) Facebook, Inc. and its affiliates.
 use super::*;
 use crate::common::{committee, keys};
@@ -53,7 +55,7 @@ async fn propose_payload() {
     );
 
     // Send enough digests for the header payload.
-    let digest = name.digest();
+    let digest = Digest0{0:name.0[..32].try_into().unwrap()};
     let worker_id = 0;
     tx_our_digests
         .send((digest.clone(), worker_id))
