@@ -2,9 +2,9 @@
 use config::{Committee, Stake};
 use crypto::Hash as _;
 use crypto::{Digest0, PublicKey};
-use glow_lib::node::GlowLib;
 //use glow_lib::node::GlowLib;
-//use hashrand::node::HashRand;
+//use glow_lib::node::GlowLib;
+use hashrand::node::HashRand;
 //use hashrand::node::HashRand;
 use hnode::Node;
 use log::{debug, info, log_enabled, warn};
@@ -136,21 +136,21 @@ impl Consensus {
             vec_native.push(tpub.join("/"));
         }
         arr_strsplit.push(concat_str.as_str());
-        _exit_tx = GlowLib::spawn(
-            config, 
-            arr_strsplit.join("/").as_str(),
-            vec_native,
-            coin_const_recv,
-            coin_send
-        ).unwrap();
-        // _exit_tx = HashRand::spawn(
+        // _exit_tx = GlowLib::spawn(
         //     config, 
-        //     0, 
-        //     _batch, 
-        //     _frequency, 
-        //     coin_const_recv, 
+        //     arr_strsplit.join("/").as_str(),
+        //     vec_native,
+        //     coin_const_recv,
         //     coin_send
         // ).unwrap();
+        _exit_tx = HashRand::spawn(
+            config,
+            0, 
+            _batch, 
+            _frequency, 
+            coin_const_recv, 
+            coin_send
+        ).unwrap();
         let mut signals = Signals::new(&[SIGINT, SIGTERM]).unwrap();
         signals.forever().next();
         log::error!("Received termination signal");
