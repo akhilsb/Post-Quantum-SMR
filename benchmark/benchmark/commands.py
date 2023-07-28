@@ -68,3 +68,7 @@ class CommandMaker:
         assert isinstance(origin, str)
         node, client = join(origin, 'node'), join(origin, 'benchmark_client')
         return f'rm node ; rm benchmark_client ; ln -s {node} . ; ln -s {client} .'
+    
+    @staticmethod
+    def unzip_tkeys(fileloc,dir, debug=False):
+        return (f'tar -xvzf {fileloc} && cp {dir}/* .')

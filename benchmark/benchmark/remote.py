@@ -216,7 +216,13 @@ class Bench:
                 c.put(PathMaker.key_file(i), '.')
                 c.put(PathMaker.parameters_file(), '.')
                 c.put(PathMaker.hashrand_config_file(i),'.')
+                c.put(PathMaker.t_key_file(),'.')
                 c.put("ip_file",'.')
+                # unzip tkeys file
+                unzip_cmd = CommandMaker.unzip_tkeys('tkeys.tar.gz','thresh_keys')
+                print(unzip_cmd)
+                self._background_run(ip,unzip_cmd,"unzip.log")
+                # Run the primaries (except the faulty ones).
         return committee
 
     def _run_single(self, rate, committee, bench_parameters, debug=False):
@@ -243,9 +249,7 @@ class Bench:
                 )
                 log_file = PathMaker.client_log_file(i, id)
                 self._background_run(host, cmd, log_file)
-
-        # Run the primaries (except the faulty ones).
-        Print.info('Booting primaries...')
+        
         for i, address in enumerate(committee.primary_addresses(faults)):
             host = Committee.ip(address)
             cmd = CommandMaker.run_primary(
@@ -256,6 +260,7 @@ class Bench:
                 PathMaker.hashrand_config_file(i),
                 debug=debug
             )
+            Print.info('Booting primaries...')
             log_file = PathMaker.primary_log_file(i)
             self._background_run(host, cmd, log_file)
 

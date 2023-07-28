@@ -33,6 +33,11 @@ class PathMaker:
         return f'.node-{i}.json'
     
     @staticmethod
+    def t_key_file():
+        #assert isinstance(i, int) and i >= 0
+        return f'tkeys.tar.gz'
+    
+    @staticmethod
     def hashrand_config_file(i):
         assert isinstance(i, int) and i >= 0
         return f'nodes-{i}.json'
