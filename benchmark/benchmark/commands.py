@@ -11,6 +11,12 @@ class CommandMaker:
         return (
             f'rm -r .db-* ; rm .*.json ; mkdir -p {PathMaker.results_path()}'
         )
+    
+    @staticmethod
+    def cleanup_rerun():
+        return (
+            f'rm -r .db-* ; mkdir -p {PathMaker.results_path()}'
+        )
 
     @staticmethod
     def clean_logs():
