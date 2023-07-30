@@ -98,7 +98,7 @@ def remote(ctx, debug=False):
         'nodes': [64],
         'workers': 1,
         'collocate': True,
-        'rate': [20_000,40_000,50_000,60_000,80_000],
+        'rate': [5_000,40_000,50_000,60_000,80_000],
         'tx_size': 256,
         'duration': 150,
         'runs': 1,
@@ -127,7 +127,7 @@ def rerun(ctx, debug=False):
         'collocate': True,
         'rate': [5_000],
         'tx_size': 256,
-        'duration': 50,
+        'duration': 150,
         'runs': 1,
     }
     node_params = {

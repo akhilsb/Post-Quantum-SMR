@@ -269,7 +269,7 @@ impl Consensus {
                 sequence.push(x);
             }
         }
-
+        log::debug!("{:?}",sequence);
         // Log the latest committed round of every authority (for debug).
         if log_enabled!(log::Level::Debug) {
             for (name, round) in &state.last_committed {
@@ -282,7 +282,7 @@ impl Consensus {
             #[cfg(not(feature = "benchmark"))]
             info!("Committed {}", certificate.header);
 
-            #[cfg(feature = "benchmark")]
+            //#[cfg(feature = "benchmark")]
             for digest in certificate.header.payload.keys() {
                 // NOTE: This log entry is used to compute performance.
                 info!("Committed {} -> {:?}", certificate.header, digest);
