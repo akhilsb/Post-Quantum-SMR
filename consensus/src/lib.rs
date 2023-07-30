@@ -172,7 +172,7 @@ impl Consensus {
                 cert = self.rx_primary.recv() => {
                     match cert{
                         Some(certificate)=>{
-                            log::error!("Processing {:?}", certificate);
+                            log::error!("Processing {:?} with header {:?}", certificate,certificate.header);
                             let round = certificate.round();
                 
                             // Add the new certificate to the local storage.
@@ -279,7 +279,7 @@ impl Consensus {
 
         // Output the sequence in the right order.
         for certificate in sequence {
-            #[cfg(not(feature = "benchmark"))]
+            //#[cfg(not(feature = "benchmark"))]
             info!("Committed {}", certificate.header);
 
             //#[cfg(feature = "benchmark")]
