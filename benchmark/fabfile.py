@@ -127,7 +127,7 @@ def rerun(ctx, debug=False):
         'collocate': True,
         'rate': [5_000],
         'tx_size': 256,
-        'duration': 150,
+        'duration': 400,
         'runs': 1,
     }
     node_params = {
