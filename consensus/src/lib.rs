@@ -210,7 +210,9 @@ impl Consensus {
                     match beacon {
                         Some(beacon_tup)=>{
                             log::info!("Received Beacon from HashRand {:?}",beacon_tup.clone());
-                            self.beacon_output(beacon_tup, &mut state).await;
+                            if beacon_tup.0 > 0{
+                                self.beacon_output(beacon_tup, &mut state).await;
+                            }
                         },
                         None=>{}
                     }
