@@ -81,7 +81,7 @@ impl Proposer {
     async fn make_header(&mut self) {
         // Make a new header.
         let header = Header::new(
-            self.name.clone(),
+            self.name,
             self.round,
             self.digests.drain(..).collect(),
             self.last_parents.drain(..).collect(),
