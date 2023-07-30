@@ -61,6 +61,7 @@ class Bench:
             # The following dependencies prevent the error: [error: linker `cc` not found].
             'sudo apt-get -y install build-essential',
             'sudo apt-get -y install cmake',
+            'sudo apt-get -y install libgmp-dev',
 
             # Install rust (non-interactive).
             'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
@@ -457,34 +458,6 @@ class Bench:
             )
         committee = Committee(addresses, self.settings.base_port)
         committee.print(PathMaker.committee_file())
-        # ip_file = ""
-        # for x in range(len(hosts)):
-        #     port = self.settings.hrnd_port + x
-        #     ip_file += hosts[x]+ ":"+ str(port) + "\n"
-        # ip_file += hosts[0] + ":" + str(self.settings.client_run_port) + "\n"
-        # with open("ip_file", 'w') as f:
-        #     f.write(ip_file)
-        # f.close()
-        # node_parameters.print(PathMaker.parameters_file())
-
-        # # Cleanup all nodes and upload configuration files.
-        # names = names[:len(names)-bench_parameters.faults]
-        # progress = progress_bar(names, prefix='Uploading config files:')
-        # for i, name in enumerate(progress):
-        #     for ip in committee.ips(name):
-        #         c = Connection(ip, user='ubuntu', connect_kwargs=self.connect)
-        #         c.run(f'{CommandMaker.cleanup()} || true', hide=True)
-        #         c.put(PathMaker.committee_file(), '.')
-        #         c.put(PathMaker.key_file(i), '.')
-        #         c.put(PathMaker.parameters_file(), '.')
-        #         c.put(PathMaker.hashrand_config_file(i),'.')
-        #         c.put(PathMaker.t_key_file(),'.')
-        #         c.put("ip_file",'.')
-        #         # unzip tkeys file
-        #         unzip_cmd = CommandMaker.unzip_tkeys('tkeys.tar.gz','thresh_keys')
-        #         print(unzip_cmd)
-        #         self._background_run(ip,unzip_cmd,"unzip.log")
-        #         # Run the primaries (except the faulty ones).
         return committee
     
     def rerun(self, bench_parameters_dict, node_parameters_dict, debug=False):
@@ -550,3 +523,78 @@ class Bench:
                             e = FabricError(e)
                         Print.error(BenchError('Benchmark failed', e))
                         continue
+    
+    def fetch_logs(self, bench_parameters_dict, node_parameters_dict, debug=False):
+        assert isinstance(debug, bool)
+        Print.heading('Starting remote benchmark')
+        try:
+            bench_parameters = BenchParameters(bench_parameters_dict)
+            node_parameters = NodeParameters(node_parameters_dict)
+        except ConfigError as e:
+            raise BenchError('Invalid nodes or bench parameters', e)
+
+        # Select which hosts to use.
+        hosts = self._select_hosts(bench_parameters)
+        if not hosts:
+            Print.warn('There are not enough instances available')
+            return
+
+        # Generate configuration files.
+        keys = []
+        key_files = [PathMaker.key_file(i) for i in range(len(hosts))]
+        for filename in key_files:
+            #cmd = CommandMaker.generate_key(filename).split()
+            #subprocess.run(cmd, check=True)
+            keys += [Key.from_file(filename)]
+
+        names = [x.name for x in keys]
+        #pq_pubkeys = [x.pq_pubkey for x in keys]
+        if bench_parameters.collocate:
+            workers = bench_parameters.workers
+            addresses = OrderedDict(
+                (x, [y] * (workers + 1)) for x, y in zip(names, hosts)
+            )
+        else:
+            addresses = OrderedDict(
+                (x, y) for x, y in zip(names, hosts)
+            )
+        committee = Committee(addresses, self.settings.base_port)
+        # # Update nodes.
+        # try:
+        #     self._update(selected_hosts, bench_parameters.collocate)
+        # except (GroupException, ExecutionError) as e:
+        #     e = FabricError(e) if isinstance(e, GroupException) else e
+        #     raise BenchError('Failed to update nodes', e)
+
+        # # Upload all configuration files.
+        # try:
+        #     committee = self._config(
+        #         selected_hosts, node_parameters, bench_parameters
+        #     )
+        # except (subprocess.SubprocessError, GroupException) as e:
+        #     e = FabricError(e) if isinstance(e, GroupException) else e
+        #     raise BenchError('Failed to configure nodes', e)
+
+        # Run benchmarks.
+        for n in bench_parameters.nodes:
+            committee_copy = deepcopy(committee)
+            committee_copy.remove_nodes(committee.size() - n)
+            # Run the benchmark.
+            #Print.heading(f'Run {i+1}/{bench_parameters.runs}')
+            try:
+                faults = bench_parameters.faults
+                logger = self._logs(committee_copy, faults)
+                logger.print(PathMaker.result_file(
+                    faults,
+                    n, 
+                    bench_parameters.workers,
+                    bench_parameters.collocate,
+                    1, 
+                    bench_parameters.tx_size, 
+                ))
+            except (subprocess.SubprocessError, GroupException, ParseError) as e:
+                self.kill(hosts=hosts)
+                if isinstance(e, GroupException):
+                    e = FabricError(e)
+                Print.error(BenchError('Benchmark failed', e))
+                continue

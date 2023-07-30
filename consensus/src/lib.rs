@@ -194,7 +194,7 @@ impl Consensus {
                                 }
                                 self.beacon_map.insert((r/2) as u32,0);
                             }
-                            else if self.beacon_map.contains_key(&((r/2) as u32)){
+                            else if r % 2 == 0 && r > 4 && self.beacon_map.contains_key(&((r/2) as u32)){
                                 let beacon = self.beacon_map.get(&((r/2) as u32)).unwrap();
                                 if beacon.clone() > 0{
                                     self.beacon_output((((r/2) as u32),*beacon), &mut state).await;
@@ -209,6 +209,7 @@ impl Consensus {
                 beacon = self.beacon_queue.recv() =>{
                     match beacon {
                         Some(beacon_tup)=>{
+                            log::info!("Received Beacon from HashRand {:?}",beacon_tup.clone());
                             self.beacon_output(beacon_tup, &mut state).await;
                         },
                         None=>{}
@@ -219,7 +220,6 @@ impl Consensus {
     }
 
     async fn beacon_output(&mut self,beacon_tup:(u32,u128),state:&mut State){
-        log::info!("Received Beacon from HashRand {:?}",beacon_tup.clone());
         // Try to order the dag to commit. Start from the highest round for which we have at least
         // 2f+1 certificates. This is because we need them to reveal the common coin.
         let r = 2*beacon_tup.0 as u64;
@@ -252,12 +252,12 @@ impl Consensus {
         // the last committed leader, and commit all preceding leaders in the right order. Committing
         // a leader block means committing all its dependencies.
         if stake < self.committee.validity_threshold() {
-            debug!("Leader {:?} does not have enough support", leader);
+            info!("Leader {:?} does not have enough support", leader);
             return;
         }
 
         // Get an ordered list of past leaders that are linked to the current leader.
-        debug!("Leader {:?} has enough support", leader);
+        info!("Leader {:?} has enough support", leader);
         let mut sequence = Vec::new();
         for leader in self.order_leaders(leader,beacon_tup.1.clone(), &state).iter().rev() {
             // Starting from the oldest leader, flatten the sub-dag referenced by the leader.

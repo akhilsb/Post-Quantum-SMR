@@ -125,9 +125,9 @@ def rerun(ctx, debug=False):
         'nodes': [64],
         'workers': 1,
         'collocate': True,
-        'rate': [50_000,60_000],
+        'rate': [5_000],
         'tx_size': 256,
-        'duration': 250,
+        'duration': 50,
         'runs': 1,
     }
     node_params = {
@@ -175,5 +175,32 @@ def logs(ctx):
     ''' Print a summary of the logs '''
     try:
         print(LogParser.process('./logs', faults='?').result())
+    except ParseError as e:
+        Print.error(BenchError('Failed to parse logs', e))
+
+@task
+def fetchlogs(ctx,debug=False):
+    ''' Print a summary of the logs '''
+    try:
+        bench_params = {
+            'faults': 0,
+            'nodes': [64],
+            'workers': 1,
+            'collocate': True,
+            'rate': [5_000],
+            'tx_size': 256,
+            'duration': 50,
+            'runs': 1,
+        }
+        node_params = {
+            'header_size': 1_000,  # bytes
+            'max_header_delay': 200,  # ms
+            'gc_depth': 50,  # rounds
+            'sync_retry_delay': 10_000,  # ms
+            'sync_retry_nodes': 3,  # number of nodes
+            'batch_size': 500_000,  # bytes
+            'max_batch_delay': 200  # ms
+        }
+        Bench(ctx).fetch_logs(bench_params,node_params)
     except ParseError as e:
         Print.error(BenchError('Failed to parse logs', e))
