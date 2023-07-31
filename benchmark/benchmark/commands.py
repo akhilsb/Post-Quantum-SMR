@@ -43,7 +43,7 @@ class CommandMaker:
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
         return (f'./node {v} run --keys {keys} --committee {committee} '
-                f'--store {store} --parameters {parameters} --hashrand_conf {hashrand_conf} --hashrand_batch 100 --hashrand_freq 10 primary')
+                f'--store {store} --parameters {parameters} --hashrand_conf {hashrand_conf} --hashrand_batch 50 --hashrand_freq 25 primary')
 
     @staticmethod
     def run_worker(keys, committee, store, parameters, id,hashrand_conf, debug=False):

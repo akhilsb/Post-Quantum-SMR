@@ -125,7 +125,7 @@ def rerun(ctx, debug=False):
         'nodes': [40],
         'workers': 1,
         'collocate': True,
-        'rate': [20_000,40_000,80_000,100_000,120_000],
+        'rate': [80_000,100_000,120_000,140_000],
         'tx_size': 256,
         'duration': 150,
         'runs': 1,
@@ -184,7 +184,7 @@ def fetchlogs(ctx,debug=False):
     try:
         bench_params = {
             'faults': 0,
-            'nodes': [64],
+            'nodes': [40],
             'workers': 1,
             'collocate': True,
             'rate': [5_000],
