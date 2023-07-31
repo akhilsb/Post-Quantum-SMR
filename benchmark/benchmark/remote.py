@@ -250,7 +250,22 @@ class Bench:
                 )
                 log_file = PathMaker.client_log_file(i, id)
                 self._background_run(host, cmd, log_file)
-        
+
+        # Run the primaries (except the faulty ones).
+        Print.info('Booting primaries...')
+        for i, address in enumerate(committee.primary_addresses(faults)):
+            host = Committee.ip(address)
+            cmd = CommandMaker.run_primary(
+                PathMaker.key_file(i),
+                PathMaker.committee_file(),
+                PathMaker.db_path(i),
+                PathMaker.parameters_file(),
+                PathMaker.hashrand_config_file(i),
+                debug=debug
+            )
+            log_file = PathMaker.primary_log_file(i)
+            self._background_run(host, cmd, log_file)
+
         # Run the workers (except the faulty ones).
         Print.info('Booting workers...')
         for i, addresses in enumerate(workers_addresses):
@@ -267,34 +282,6 @@ class Bench:
                 )
                 log_file = PathMaker.worker_log_file(i, id)
                 self._background_run(host, cmd, log_file)
-
-        for i, address in enumerate(committee.primary_addresses(faults)):
-            host = Committee.ip(address)
-            cmd = CommandMaker.run_primary(
-                PathMaker.key_file(i),
-                PathMaker.committee_file(),
-                PathMaker.db_path(i),
-                PathMaker.parameters_file(),
-                PathMaker.hashrand_config_file(i),
-                debug=debug
-            )
-            Print.info('Booting primaries...')
-            log_file = PathMaker.primary_log_file(i)
-            self._background_run(host, cmd, log_file)
-            host = Committee.ip(address)
-            cmd = CommandMaker.run_worker(
-                PathMaker.key_file(i),
-                PathMaker.committee_file(),
-                PathMaker.db_path(i, id),
-                PathMaker.parameters_file(),
-                id,  # The worker's id.
-                PathMaker.hashrand_config_file(i),
-                debug=debug
-            )
-            log_file = PathMaker.worker_log_file(i, id)
-            self._background_run(host, cmd, log_file)
-
-        
 
         # Wait for all transactions to be processed.
         duration = bench_parameters.duration
