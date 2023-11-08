@@ -1,5 +1,5 @@
 # Post Quantum Asynchronous SMR
-This repository implements a post-quantum secure asynchronous SMR protocol on top of Tusk. This protocol uses lattice-based <code>dilithium</code> signatures in place of <code>EdDSA</code> signatures used by Tusk. This protocol also uses HashRand as a post-quantum secure random beacon protocol to achieve liveness in asynchrony. Please note that this repository is a research prototype that has **not** been rigorously tested for software bugs. Please use at your own risk. 
+This repository implements a post-quantum secure asynchronous SMR protocol on top of Tusk. This protocol uses lattice-based <code>dilithium</code> signatures in place of <code>EdDSA</code> signatures used by Tusk. This protocol also uses <code>HashRand</code> ( https://github.com/akhilsb/hashrand-rs ) as a post-quantum secure random beacon protocol to achieve liveness in asynchrony. Please note that this repository is a research prototype that has **not** been rigorously tested for software bugs. Please use at your own risk. 
 
 # Narwhal and Tusk
 
