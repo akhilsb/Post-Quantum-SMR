@@ -149,7 +149,10 @@ class LogParser:
         return sizes, samples, ip
 
     def _to_posix(self, string):
-        x = datetime.fromisoformat(string.replace('Z', '+00:00'))
+        sp = string.split('Z')
+        sp = sp[0]+'Z'
+        x = sp.replace('Z', '+00:00')
+        x = datetime.fromisoformat(x)
         return datetime.timestamp(x)
 
     def _consensus_throughput(self):

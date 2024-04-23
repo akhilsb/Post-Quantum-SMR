@@ -5,7 +5,7 @@ This document explains how to benchmark the codebase and read benchmarks' result
 When running benchmarks, the codebase is automatically compiled with the feature flag `benchmark`. This enables the node to print some special log entries that are then read by the python scripts and used to compute performance. These special log entries are clearly indicated with comments in the code: make sure to not alter them (otherwise the benchmark scripts will fail to interpret the logs).
 
 ### Parametrize the benchmark
-After cloning the repo and [installing all dependencies](https://github.com/asonnino/narwhal#quick-start), you can use [Fabric](http://www.fabfile.org/) to run benchmarks on your local machine.  Locate the task called `local` in the file [fabfile.py](https://github.com/asonnino/narwhal/blob/master/benchmark/fabfile.py):
+After cloning the repo and [installing all dependencies](https://github.com/akhilsb/pqsmr-rs#quick-start), you can use [Fabric](http://www.fabfile.org/) to run benchmarks on your local machine.  Locate the task called `local` in the file [fabfile.py](https://github.com/akhilsb/pqsmr-rs/blob/master/benchmark/fabfile.py):
 ```python
 @task
 def local(ctx):
@@ -44,6 +44,11 @@ They are defined as follows:
 * `sync_retry_nodes`: Determine with how many nodes to sync when re-trying to send sync-request. These nodes are picked at random from the committee.
 * `batch_size`: The preferred batch size. The workers seal a batch of transactions when it reaches this size. Denominated in bytes.
 * `max_batch_delay`: The delay after which the workers seal a batch of transactions, even if `max_batch_size` is not reached. Denominated in ms.
+
+### Configuring HashRand
+Extract the files from `hashrand-config` directory into the `benchmark` directory. For example, if running a protocol on $n=4$ nodes, extract files from `hrnd-4.zip` file into this folder. If `PQ-Tusk` needs to be instantiated with BLS signatures, extract the files in the `tkeys-{n}.tar.gz` file into this directory. Further, change the `consensus/src/lib.rs` file from lines 139-145 and configure the `hashrand` common coin provider to instead use `Dfinity-DVRF` beacon.
+
+In case custom configuration files for a different number of nodes need to be generated, check out the [HashRand](https://github.com/akhilsb/hashrand-rs) repository. 
 
 ### Run the benchmark
 Once you specified both `bench_params` and `node_params` as desired, run:
@@ -104,22 +109,25 @@ $ ssh-keygen -f ~/.ssh/aws
 ```
 
 ### Step 3. Configure the testbed
-The file [settings.json](https://github.com/asonnino/narwhal/blob/master/benchmark/settings.json) (located in [narwhal/benchmarks](https://github.com/asonnino/narwhal/blob/master/benchmark)) contains all the configuration parameters of the testbed to deploy. Its content looks as follows:
+The file [settings.json](https://github.com/akhilsb/pqsmr-rs/blob/master/benchmark/settings.json) (located in [pqsmr-rs/benchmarks](https://github.com/akhilsb/pqsmr-rs/blob/master/benchmark)) contains all the configuration parameters of the testbed to deploy. Its content looks as follows:
 ```json
 {
     "key": {
         "name": "aws",
-        "path": "/absolute/key/path"
+        "path": "/home/akhil/.ssh/aws"
     },
     "port": 5000,
+    "hrnd_port": 8500,
+    "client_base_port": 7000,
+    "client_run_port": 9000,
     "repo": {
-        "name": "narwhal",
-        "url": "https://github.com/asonnino/narwhal.git",
+        "name": "pqsmr-rs",
+        "url": "https://github.com/akhilsb/pqsmr-rs",
         "branch": "master"
     },
     "instances": {
-        "type": "m5d.8xlarge",
-        "regions": ["us-east-1", "eu-north-1", "ap-southeast-2", "us-west-1", "ap-northeast-1"]
+        "type": "c5.large",
+        "regions": ["us-east-1","us-east-2","us-west-1","us-west-2","ca-central-1", "eu-west-1", "ap-southeast-1", "ap-northeast-1"]
     }
 }
 ```
@@ -137,34 +145,34 @@ The second block (`ports`) specifies the TCP ports to use:
 ```json
 "port": 5000,
 ```
-Narwhal requires a number of TCP ports, depening on the number of workers per node, Each primary requires 2 ports (one to receive messages from other primaties and one to receive messages from its workers), and each worker requires 3 ports (one to receive client transactions, one to receive messages from its primary, and one to receive messages from other workers). Note that the script will open a large port range (5000-7000) to the WAN on all your AWS instances. 
+PQ-Tusk requires a number of TCP ports, depening on the number of workers per node, Each primary requires 2 ports (one to receive messages from other primaties and one to receive messages from its workers), and each worker requires 3 ports (one to receive client transactions, one to receive messages from its primary, and one to receive messages from other workers). Note that the script will open a large port range (5000-7000) to the WAN on all your AWS instances. 
 
 The third block (`repo`) contains the information regarding the repository's name, the URL of the repo, and the branch containing the code to deploy: 
 ```json
 "repo": {
-    "name": "narwhal",
-    "url": "https://github.com/asonnino/narwhal.git",
-    "branch": "master"
-},
+        "name": "pqsmr-rs",
+        "url": "https://github.com/akhilsb/pqsmr-rs",
+        "branch": "master"
+    },
 ```
 Remember to update the `url` field to the name of your repo. Modifying the branch name is particularly useful when testing new functionalities without having to checkout the code locally. 
 
 The the last block (`instances`) specifies the [AWS instance type](https://aws.amazon.com/ec2/instance-types) and the [AWS regions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) to use:
 ```json
 "instances": {
-    "type": "m5d.8xlarge",
-    "regions": ["us-east-1", "eu-north-1", "ap-southeast-2", "us-west-1", "ap-northeast-1"]
+    "type": "c5.large",
+    "regions": ["us-east-1","us-east-2","us-west-1","us-west-2","ca-central-1", "eu-west-1", "ap-southeast-1", "ap-northeast-1"]
 }
 ```
 The instance type selects the hardware on which to deploy the testbed. For example, `m5d.8xlarge` instances come with 32 vCPUs (16 physical cores), 128 GB of RAM, and guarantee 10 Gbps of bandwidth. The python scripts will configure each instance with 300 GB of SSD hard drive. The `regions` field specifies the data centers to use. If you require more nodes than data centers, the python scripts will distribute the nodes as equally as possible amongst the data centers. All machines run a fresh install of Ubuntu Server 20.04.
 
 ### Step 4. Create a testbed
-The AWS instances are orchestrated with [Fabric](http://www.fabfile.org) from the file [fabfile.py](https://github.com/asonnino/narwhal/blob/master/benchmark/fabfile.pyy) (located in [narwhal/benchmarks](https://github.com/asonnino/narwhal/blob/master/benchmark)); you can list all possible commands as follows:
+The AWS instances are orchestrated with [Fabric](http://www.fabfile.org) from the file [fabfile.py](https://github.com/akhilsb/pqsmr-rs/blob/master/benchmark/fabfile.pyy) (located in [pqsmr-rs/benchmarks](https://github.com/akhilsb/pqsmr-rs/blob/master/benchmark)); you can list all possible commands as follows:
 ```
-$ cd narwhal/benchmark
+$ cd pqsmr-rs/benchmark
 $ fab --list
 ```
-The command `fab create` creates new AWS instances; open [fabfile.py](https://github.com/asonnino/narwhal/blob/master/benchmark/fabfile.py) and locate the `create` task:
+The command `fab create` creates new AWS instances; open [fabfile.py](https://github.com/akhilsb/pqsmr-rs/blob/master/benchmark/fabfile.py) and locate the `create` task:
 ```python
 @task
 def create(ctx, nodes=2):
@@ -189,13 +197,13 @@ This may take a long time as the command will first update all instances.
 The commands `fab stop` and `fab start` respectively stop and start the testbed without destroying it (it is good practice to stop the testbed when not in use as AWS can be quite expensive); and `fab destroy` terminates all instances and destroys the testbed. Note that, depending on the instance types, AWS instances may take up to several minutes to fully start or stop. The command `fab info` displays a nice summary of all available machines and information to manually connect to them (for debug).
 
 ### Step 5. Run a benchmark
-After setting up the testbed, running a benchmark on AWS is similar to running it locally (see [Run Local Benchmarks](https://github.com/asonnino/narwhal/tree/master/benchmark#local-benchmarks)). Locate the task `remote` in [fabfile.py](https://github.com/asonnino/narwhal/blob/master/benchmark/fabfile.py):
+After setting up the testbed, running a benchmark on AWS is similar to running it locally (see [Run Local Benchmarks](https://github.com/akhilsb/pqsmr-rs/tree/master/benchmark#local-benchmarks)). Locate the task `remote` in [fabfile.py](https://github.com/akhilsb/pqsmr-rs/blob/master/benchmark/fabfile.py):
 ```python
 @task
 def remote(ctx):
     ...
 ```
-The benchmark parameters are similar to [local benchmarks](https://github.com/asonnino/narwhal/tree/master/benchmark#local-benchmarks) but allow to specify the number of nodes and the input rate as arrays to automate multiple benchmarks with a single command. The parameter `runs` specifies the number of times to repeat each benchmark (to later compute the average and stdev of the results), and the parameter `collocate` specifies whether to collocate all the node's workers and the primary on the same machine. If `collocate` is set to `False`, the script will run one node per data center (AWS region), with its primary and each of its worker running on a dedicated instance.
+The benchmark parameters are similar to [local benchmarks](https://github.com/akhilsb/pqsmr-rs/tree/master/benchmark#local-benchmarks) but allow to specify the number of nodes and the input rate as arrays to automate multiple benchmarks with a single command. The parameter `runs` specifies the number of times to repeat each benchmark (to later compute the average and stdev of the results), and the parameter `collocate` specifies whether to collocate all the node's workers and the primary on the same machine. If `collocate` is set to `False`, the script will run one node per data center (AWS region), with its primary and each of its worker running on a dedicated instance.
 ```python
 bench_params = {
     'nodes': [10, 20, 30],
@@ -214,7 +222,7 @@ Once you specified both `bench_params` and `node_params` as desired, run:
 ```
 $ fab remote
 ```
-This command first updates all machines with the latest commit of the GitHub repo and branch specified in your file [settings.json](https://github.com/asonnino/narwhal/blob/master/benchmark/settings.json) (step 3); this ensures that benchmarks are always run with the latest version of the code. It then generates and uploads the configuration files to each machine, runs the benchmarks with the specified parameters, and downloads the logs. It finally parses the logs and prints the results into a folder called `results` (which is automatically created if it doesn't already exists). You can run `fab remote` multiple times without fearing to override previous results, the command either appends new results to a file containing existing ones or prints them in separate files. If anything goes wrong during a benchmark, you can always stop it by running `fab kill`.
+This command first updates all machines with the latest commit of the GitHub repo and branch specified in your file [settings.json](https://github.com/akhilsb/pqsmr-rs/blob/master/benchmark/settings.json) (step 3); this ensures that benchmarks are always run with the latest version of the code. It then generates and uploads the configuration files to each machine, runs the benchmarks with the specified parameters, and downloads the logs. It finally parses the logs and prints the results into a folder called `results` (which is automatically created if it doesn't already exists). You can run `fab remote` multiple times without fearing to override previous results, the command either appends new results to a file containing existing ones or prints them in separate files. If anything goes wrong during a benchmark, you can always stop it by running `fab kill`.
  
 ### Step 6. Plot the results
 Once you have enough results, you can aggregate and plot them:

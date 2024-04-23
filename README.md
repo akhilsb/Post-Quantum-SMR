@@ -1,23 +1,25 @@
 # Post Quantum Asynchronous SMR
 This repository implements a post-quantum secure asynchronous SMR protocol on top of Tusk. This protocol uses lattice-based <code>dilithium</code> signatures in place of <code>EdDSA</code> signatures used by Tusk. This protocol also uses <code>HashRand</code> ( https://github.com/akhilsb/hashrand-rs ) as a post-quantum secure random beacon protocol to achieve liveness in asynchrony. Please note that this repository is a research prototype that has **not** been rigorously tested for software bugs. Please use at your own risk. 
 
-# Narwhal and Tusk
+# PQ-Tusk
+This repository has been cloned from [Narwhal](https://github.com/asonnino/narwhal).
 
-[![build status](https://img.shields.io/github/workflow/status/asonnino/narwhal/Rust/master?style=flat-square&logo=github)](https://github.com/asonnino/narwhal/actions)
-[![rustc](https://img.shields.io/badge/rustc-1.51+-blue?style=flat-square&logo=rust)](https://www.rust-lang.org)
-[![license](https://img.shields.io/badge/license-Apache-blue.svg?style=flat-square)](LICENSE)
-
-This repo provides an implementation of [Narwhal and Tusk](https://arxiv.org/pdf/2105.11827.pdf). The codebase has been designed to be small, efficient, and easy to benchmark and modify. It has not been designed to run in production but uses real cryptography ([dalek](https://doc.dalek.rs/ed25519_dalek)), networking ([tokio](https://docs.rs/tokio)), and storage ([rocksdb](https://docs.rs/rocksdb)).
+This repo provides an implementation of PQ-Tusk. The codebase has been designed to be small, efficient, and easy to benchmark and modify. It has not been designed to run in production but uses real pq-cryptography ([dilithium](https://github.com/akhilsb/pqcrypto)), networking ([tokio](https://docs.rs/tokio)), and storage ([rocksdb](https://docs.rs/rocksdb)).
 
 ## Quick Start
 The core protocols are written in Rust, but all benchmarking scripts are written in Python and run with [Fabric](http://www.fabfile.org/).
 To deploy and benchmark a testbed of 4 nodes on your local machine, clone the repo and install the python dependencies:
 ```
-$ git clone https://github.com/asonnino/narwhal.git
-$ cd narwhal/benchmark
+$ git clone https://github.com/akhilsb/pqsmr-rs.git
+$ cd pqsmr-rs/benchmark
 $ pip install -r requirements.txt
 ```
-You also need to install Clang (required by rocksdb) and [tmux](https://linuxize.com/post/getting-started-with-tmux/#installing-tmux) (which runs all nodes and clients in the background). Finally, run a local benchmark using fabric:
+You also need to install Clang (required by rocksdb) and [tmux](https://linuxize.com/post/getting-started-with-tmux/#installing-tmux) (which runs all nodes and clients in the background). 
+
+### Configuring HashRand
+HashRand requires configuration files of the form `nodes-{i}.json` and `ip_file` for configuring secure channels among nodes. A set of these configuration files are in the `benchmark/hashrand-config` directory for values $n=4,16,40,64$. Extract these files into the `benchmark` directory.  
+
+Finally, run a local benchmark using fabric:
 ```
 $ fab local
 ```
@@ -55,9 +57,9 @@ This command may take a long time the first time you run it (compiling rust code
 ```
 
 ## Next Steps
-The next step is to read the paper [Narwhal and Tusk: A DAG-based Mempool and Efficient BFT Consensus](https://arxiv.org/pdf/2105.11827.pdf). It is then recommended to have a look at the README files of the [worker](https://github.com/asonnino/narwhal/tree/master/worker) and [primary](https://github.com/asonnino/narwhal/tree/master/primary) crates. An additional resource to better understand the Tusk consensus protocol is the paper [All You Need is DAG](https://arxiv.org/abs/2102.08325) as it describes a similar protocol. 
+The next step is to read the paper [Narwhal and Tusk: A DAG-based Mempool and Efficient BFT Consensus](https://arxiv.org/pdf/2105.11827.pdf) and [HashRand: Efficient Asynchronous Random Beacon without Threshold Cryptographic Setup](https://eprint.iacr.org/2023/1755). An additional resource to better understand the Tusk consensus protocol is the paper [All You Need is DAG](https://arxiv.org/abs/2102.08325) as it describes a similar protocol. 
 
-The README file of the [benchmark folder](https://github.com/asonnino/narwhal/tree/master/benchmark) explains how to benchmark the codebase and read benchmarks' results. It also provides a step-by-step tutorial to run benchmarks on [Amazon Web Services (AWS)](https://aws.amazon.com) accross multiple data centers (WAN).
+The README file of the [benchmark folder](https://github.com/akhilsb/pqsmr-rs/tree/master/benchmark) explains how to benchmark the codebase and read benchmarks' results. It also provides a step-by-step tutorial to run benchmarks on [Amazon Web Services (AWS)](https://aws.amazon.com) accross multiple data centers (WAN).
 
 ## License
 This software is licensed as [Apache 2.0](LICENSE).
