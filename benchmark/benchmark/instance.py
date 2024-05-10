@@ -217,11 +217,18 @@ class InstanceManager:
             raise BenchError(AWSError(e))
 
     def hosts(self, flat=False):
-        try:
-            _, ips = self._get(['pending', 'running'])
-            return [x for y in ips.values() for x in y] if flat else ips
-        except ClientError as e:
-            raise BenchError('Failed to gather instances IPs', AWSError(e))
+        import json
+        with open("instance-ips.json") as json_file:
+            json_data = json.load(json_file)
+            if flat:
+                return [x for y in json_data.values() for x in y]        
+            else:
+                return json_data
+        #try:
+        #    _, ips = self._get(['pending', 'running'])
+        #    return [x for y in ips.values() for x in y] if flat else ips
+        #except ClientError as e:
+        #    raise BenchError('Failed to gather instances IPs', AWSError(e))
 
     def print_info(self):
         hosts = self.hosts()
